@@ -18,6 +18,8 @@ class PigGame:
                 return game.roll(player)
             elif action == "bank":
                 return game.bank(player)
+            elif action == "score":
+                return game.score(player)
             elif action == "quit":
                 return game.quit(player)
         else:
@@ -114,6 +116,11 @@ class PigGame:
                     return f"You have no points to bank, {self.player2}. Roll the dice first!"
             else:
                 return f"It is not your turn, {player}. Wait for {self.player2} to finish their turn!"
+
+    def score(self, player):
+        for each in games:
+            if player in each.players:
+                return f"{each.player1}: {each.player1bank}\n{each.player2}: {each.player2bank}"
 
     def quit(self, player):
         for each in games:
