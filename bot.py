@@ -153,3 +153,8 @@ def initialize_commands(bot):
     @logger("pig-math")
     async def bank(ctx, *args):
         await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "bank"))
+
+    @pig.command(name="quit")
+    @logger("pig-math")
+    async def quit(ctx, *args):
+        await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "quit"))
