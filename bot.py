@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 # Math functions, the core of IndieBot
-from indie_math import indie_seq, indie_oeis
+from indie_math import indie_seq, indie_oeis, indie_collatz
 
 mods = []
 oeis_in_progress = False
@@ -16,7 +16,6 @@ def create_bot_instance(prefix, bot_id):
     with open("dat/mods.csv", "r+") as f:
         for each in f.readlines():
             mods.append(each.replace("\n", ""))
-        print(mods)
     initialize_events(inst)
     initialize_commands(inst)
     return inst
@@ -91,3 +90,18 @@ def initialize_commands(bot):
             oeis_in_progress = False
         else:
             await ctx.message.add_reaction("❌")
+
+    @bot.command(name="collatz")
+    @logger("all")
+    async def collatz(ctx, *args):
+        num = int(args[0])
+        inity = "" if len(args) < 2 else args[1]
+
+        collatz_results = indie_collatz.collatz_info(num)
+        if len(inity) == 1:
+            if inity == "e":
+                await ctx.message.channel.send(f"Evenity trajectory of {num}: {collatz_results.evenity_trajectory}")
+            elif inity == "o":
+                await ctx.message.channel.send(f"Oddinity trajectory of {num}: {collatz_results.oddinity_trajectory}")
+        else:
+            await ctx.message.channel.send(f"Collatz trajectory of {num}: {collatz_results.collatz_trajectory}")
