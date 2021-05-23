@@ -18,8 +18,10 @@ class PigGame:
                 return game.roll(player)
             elif action == "bank":
                 return game.bank(player)
+            elif action == "quit":
+                return game.quit(player)
         else:
-            return "There is no game in progress. Would you like to CHALLENGE someone?"
+            return f"You have no game in progress, {player}. Would you like to CHALLENGE someone?"
 
     @staticmethod
     def get_game(player):
@@ -61,24 +63,24 @@ class PigGame:
                 if roll == 1:
                     self.player1points = 0
                     self.turn = 1
-                    return f"You rolled a 1. You lose your accumulated points and your turn is over."
+                    return f"{self.player1} rolled a 1. They lose their accumulated points and their turn is over."
                 else:
                     self.player1points += roll
-                    return f"You rolled a {roll}. You have accumulated {self.player1points} points."
+                    return f"{self.player1} rolled a {roll}. They have accumulated {self.player1points} points."
             else:
-                return f"It is not your turn. Wait for {self.player1} to roll!"
+                return f"It is not your turn, {player}. Wait for {self.player1} to roll!"
         elif self.turn == 1:
             if player == self.player2:
                 roll = random.randint(1, 6)
                 if roll == 1:
                     self.player2points = 0
                     self.turn = 0
-                    return f"You rolled a 1. You lose your accumulated points and your turn is over."
+                    return f"{self.player2} rolled a 1. They lose their accumulated points and their turn is over."
                 else:
                     self.player2points += roll
-                    return f"You rolled a {roll}. You have accumulated {self.player2points} points."
+                    return f"{self.player2} rolled a {roll}. They have accumulated {self.player2points} points."
             else:
-                return f"It is not your turn. Wait for {self.player2} to roll!"
+                return f"It is not your turn, {player}. Wait for {self.player2} to roll!"
 
     def bank(self, player):
         # If the player has accumulated any points, they are banked and their turn is ended
@@ -86,7 +88,7 @@ class PigGame:
             if player == self.player1:
                 if self.player1points > 0:
                     self.player1bank += self.player1points
-                    out = f"You bank {self.player1points} points. You now have {self.player1bank} points."
+                    out = f"{self.player1} banks {self.player1points} points. They now have {self.player1bank} points."
                     self.player1points = 0
                     self.turn = 1
                     if self.player1bank >= self.target:
@@ -94,14 +96,14 @@ class PigGame:
                         PigGame.end_game(player)
                     return out
                 else:
-                    return "You have no points to bank. Roll the dice first!"
+                    return f"You have no points to bank, {self.player1}. Roll the dice first!"
             else:
-                return f"It is not your turn. Wait for {self.player1} to finish their turn!"
+                return f"It is not your turn, {player}. Wait for {self.player1} to finish their turn!"
         elif self.turn == 1:
             if player == self.player2:
                 if self.player2points > 0:
                     self.player2bank += self.player2points
-                    out = f"You bank {self.player2points} points. You now have {self.player2bank} points."
+                    out = f"{self.player2} banks {self.player2points} points. They now have {self.player2bank} points."
                     self.player2points = 0
                     self.turn = 0
                     if self.player2bank >= self.target:
@@ -109,9 +111,16 @@ class PigGame:
                         PigGame.end_game(player)
                     return out
                 else:
-                    return "You have no points to bank. Roll the dice first!"
+                    return f"You have no points to bank, {self.player2}. Roll the dice first!"
             else:
-                return f"It is not your turn. Wait for {self.player2} to finish their turn!"
+                return f"It is not your turn, {player}. Wait for {self.player2} to finish their turn!"
+
+    def quit(self, player):
+        for each in games:
+            if player in each.players:
+                games.pop(games.index(self))
+                return f"{player} has quit the game."
+        return f"{player} is not part of any game."
 
 
 class PigChallenge:
@@ -127,7 +136,7 @@ class PigChallenge:
         for each in games:
             if challenger in each.players:
                 valid_challenge = False
-                self.status = f"You cannot challenge, as a game is already in progress for you."
+                self.status = f"You cannot make a challenge, as a game is already in progress for you."
                 break
             elif challengee in each.players:
                 valid_challenge = False
