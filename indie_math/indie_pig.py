@@ -120,7 +120,7 @@ class PigGame:
     def score(self, player):
         for each in games:
             if player in each.players:
-                return f"{each.player1}: {each.player1bank}\n{each.player2}: {each.player2bank}"
+                return f"{each.player1}: {each.player1bank} ({each.player1points} unbanked)\n{each.player2}: {each.player2bank} ({each.player2points} unbanked)"
 
     def quit(self, player):
         for each in games:
