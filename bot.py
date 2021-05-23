@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 # Math functions, the core of IndieBot
-from indie_math import indie_seq, indie_oeis, indie_collatz
+from indie_math import indie_seq, indie_oeis, indie_collatz, indie_pig
 
 mods = []
 oeis_in_progress = False
@@ -49,6 +49,8 @@ def initialize_commands(bot):
                         return True
                     elif command_type == "all":
                         return True
+                    elif command_type == "pig-math":
+                        return ctx.message.channel.name == "pig-math" or ctx.message.channel.name == "bot-testing"
                     else:
                         return False
 
@@ -105,3 +107,49 @@ def initialize_commands(bot):
                 await ctx.message.channel.send(f"Oddinity trajectory of {num}: {collatz_results.oddinity_trajectory}")
         else:
             await ctx.message.channel.send(f"Collatz trajectory of {num}: {collatz_results.collatz_trajectory}")
+
+    @bot.group(name="pig")
+    async def pig(ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.message.add_reaction("❌")
+
+    def get_user_id_from_mention(user_id):
+        user_id = user_id.replace("<", "")
+        user_id = user_id.replace(">", "")
+        user_id = user_id.replace("@", "")
+        user_id = user_id.replace("!", "")
+        return user_id
+
+    # Pig Math commands
+
+    @pig.command(name="challenge")
+    @logger("pig-math")
+    async def challenge(ctx, *args):
+        challengee = get_user_id_from_mention(args[1])
+        challengee = (await bot.fetch_user(challengee)).name
+        if len(args) > 2:
+            point_target = int(args[2])
+        else:
+            point_target = 100
+        pig_challenge = indie_pig.PigChallenge.create_challenge(ctx.message.author.name, challengee, point_target)
+        await ctx.message.channel.send(pig_challenge.status)
+
+    @pig.command(name="accept")
+    @logger("pig-math")
+    async def accept(ctx, *args):
+        await ctx.message.channel.send(indie_pig.PigChallenge.accept_challenge(ctx.message.author.name))
+
+    @pig.command(name="reject")
+    @logger("pig-math")
+    async def reject(ctx, *args):
+        await ctx.message.channel.send(indie_pig.PigChallenge.reject_challenge(ctx.message.author.name))
+
+    @pig.command(name="roll")
+    @logger("pig-math")
+    async def roll(ctx, *args):
+        await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "roll"))
+
+    @pig.command(name="bank")
+    @logger("pig-math")
+    async def bank(ctx, *args):
+        await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "bank"))
