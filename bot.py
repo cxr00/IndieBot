@@ -6,8 +6,49 @@ from discord.ext import commands
 # Math functions, the core of IndieBot
 from indie_math import indie_seq, indie_oeis, indie_collatz, indie_pig
 
+import indie_help
+
 mods = []
 oeis_in_progress = False
+
+
+def logger(command_type):
+    # Encapsulates bot commands for added functionality
+    def command_wrapper(command):
+
+        # Where the magic happens. This gives commands more versatility
+        async def function_wrapper(ctx):
+
+            def has_permission():
+                global mods
+                if command_type == "modonly" and str(ctx.message.author.id) in mods:
+                    return True
+                elif command_type == "all":
+                    return True
+                elif command_type == "pig-math":
+                    return ctx.message.channel.name == "pig-math" or ctx.message.channel.name == "bot-testing"
+                else:
+                    return False
+
+            args = ctx.message.content.split(" ")[1:]
+            print("Command used:", command.__name__)
+            try:
+                if has_permission():
+                    await command(ctx, *args)
+                    # Log successful command usage
+                    with open("dat/command_log.csv", "a+") as f:
+                        f.write(f"{command.__name__},{ctx.message.author.id}\n")
+                else:
+                    await ctx.message.add_reaction("❌")
+                    print(
+                        f"User {ctx.message.author.name} does not have permission to use command {command.__name__}")
+            except Exception:
+                await ctx.message.add_reaction("❌")
+                print(traceback.format_exc())
+
+        return function_wrapper
+
+    return command_wrapper
 
 
 def create_bot_instance(prefix, bot_id):
@@ -18,6 +59,9 @@ def create_bot_instance(prefix, bot_id):
             mods.append(each.replace("\n", ""))
     initialize_events(inst)
     initialize_commands(inst)
+
+    inst.remove_command("help")
+    initialize_help_commands(inst)
     return inst
 
 
@@ -34,45 +78,6 @@ def initialize_events(bot):
 
 
 def initialize_commands(bot):
-
-    def logger(command_type):
-
-        # Encapsulates bot commands for added functionality
-        def command_wrapper(command):
-
-            # Where the magic happens. This gives commands more versatility
-            async def function_wrapper(ctx):
-
-                def has_permission():
-                    global mods
-                    if command_type == "modonly" and str(ctx.message.author.id) in mods:
-                        return True
-                    elif command_type == "all":
-                        return True
-                    elif command_type == "pig-math":
-                        return ctx.message.channel.name == "pig-math" or ctx.message.channel.name == "bot-testing"
-                    else:
-                        return False
-
-                args = ctx.message.content.split(" ")[1:]
-                print("Command used:", command.__name__)
-                try:
-                    if has_permission():
-                        await command(ctx, *args)
-                        # Log successful command usage
-                        with open("dat/command_log.csv", "a+") as f:
-                            f.write(f"{command.__name__},{ctx.message.author.id}\n")
-                    else:
-                        await ctx.message.add_reaction("❌")
-                        print(
-                            f"User {ctx.message.author.name} does not have permission to use command {command.__name__}")
-                except Exception:
-                    await ctx.message.add_reaction("❌")
-                    print(traceback.format_exc())
-
-            return function_wrapper
-
-        return command_wrapper
 
     @bot.command(name="snr")
     @logger("all")
@@ -109,7 +114,8 @@ def initialize_commands(bot):
             await ctx.message.channel.send(f"Collatz trajectory of {num}: {collatz_results.collatz_trajectory}")
 
     @bot.group(name="pig")
-    async def pig(ctx):
+    @logger("pig-math")
+    async def pig(ctx, *args):
         if ctx.invoked_subcommand is None:
             await ctx.message.add_reaction("❌")
 
@@ -124,7 +130,7 @@ def initialize_commands(bot):
 
     @pig.command(name="challenge")
     @logger("pig-math")
-    async def challenge(ctx, *args):
+    async def pig_challenge(ctx, *args):
         challengee = get_user_id_from_mention(args[1])
         challengee = (await bot.fetch_user(challengee)).name
         if len(args) > 2:
@@ -136,30 +142,41 @@ def initialize_commands(bot):
 
     @pig.command(name="accept")
     @logger("pig-math")
-    async def accept(ctx, *args):
+    async def pig_accept(ctx, *args):
         await ctx.message.channel.send(indie_pig.PigChallenge.accept_challenge(ctx.message.author.name))
 
     @pig.command(name="reject")
     @logger("pig-math")
-    async def reject(ctx, *args):
+    async def pig_reject(ctx, *args):
         await ctx.message.channel.send(indie_pig.PigChallenge.reject_challenge(ctx.message.author.name))
 
     @pig.command(name="roll")
     @logger("pig-math")
-    async def roll(ctx, *args):
+    async def pig_roll(ctx, *args):
         await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "roll"))
 
     @pig.command(name="bank")
     @logger("pig-math")
-    async def bank(ctx, *args):
+    async def pig_bank(ctx, *args):
         await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "bank"))
 
     @pig.command(name="score")
     @logger("pig-math")
-    async def score(ctx, *args):
+    async def pig_score(ctx, *args):
         await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "score"))
 
     @pig.command(name="quit")
     @logger("pig-math")
-    async def quit(ctx, *args):
+    async def pig_quit(ctx, *args):
         await ctx.message.channel.send(indie_pig.PigGame.play(ctx.message.author.name, "quit"))
+
+
+def initialize_help_commands(bot):
+
+    @bot.command(name="help")
+    @logger("all")
+    async def help_command(ctx, *args):
+        if len(args) == 0:
+            await ctx.message.channel.send(indie_help.summary())
+        else:
+            await ctx.message.channel.send(indie_help.specific(args))
