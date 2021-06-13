@@ -28,11 +28,13 @@ def initialize_il_commands(bot):
         global indie_library, focii
         if indie_library.get_node(focii[author_name][:1]).get_name() != author_name:
             await ctx.message.channel.send("<@" + str(author) + ">, you can only write under your own name, try .login to go there.")
+            return
 
         try:
             at_node: Node = indie_library.get_node(focii[author_name])
         except:
             await ctx.message.channel.send(author + ", you must .login first. Obviously.")
+            return
         string_to_write = ""
         for arg in args:
             string_to_write += " " + arg
@@ -50,6 +52,7 @@ def initialize_il_commands(bot):
             at_node: Node = indie_library.get_node(focii[author_name])
         except:
             await ctx.message.channel.send("<@" + str(author) + ">, you must .login first.")
+            return
         string_to_return = at_node.read()
         string_to_return += "\n<@" + str(author) + ">\n" + indie_library.get_node_address(focii[author_name]).replace("il.node",
                                                                                                               "IL:\\") + ">"
@@ -64,10 +67,12 @@ def initialize_il_commands(bot):
         global indie_library, focii
         if indie_library.get_node(focii[author_name][:1]).get_name() != author_name:
             await ctx.message.channel.send(author + ", you can only change things under your own name, try .login to go there.")
+            return
         try:
             at_node: Node = indie_library.get_node(focii[author_name])
         except:
             await ctx.message.channel.send("<@" + str(author) + ">, you must .login first. Obviously.")
+            return
         for arg in args:
             at_node.add_node(Node(arg))
             string_to_return += "Added node '" + arg + "'...\n"
@@ -83,11 +88,13 @@ def initialize_il_commands(bot):
         global indie_library, focii
         if indie_library.get_node(focii[author_name][:1]).get_name() != author_name:
             await ctx.message.channel.send("<@" + str(author) + ">, you can only change things under your own name, try .login to go there.")
+            return
         string_to_return = ""
         try:
             at_node: Node = indie_library.get_node(focii[author_name])
         except:
             await ctx.message.channel.send("<@" + str(author) + ">, you must .login first. Obviously.")
+            return
         for arg in args:
             string_to_return += rem_node(author, author_name, arg)
         string_to_return += "IL:\\" + indie_library.get_node_address(focii[author_name])[7:] + ">"
@@ -115,6 +122,7 @@ def initialize_il_commands(bot):
             at_node: Node = indie_library.get_node(focii[author_name])
         except:
             await ctx.message.channel.send("<@" + str(author) + ">, you must .login first. Obviously.")
+            return
         focii[author_name] = focii[author_name][:-1]
         await ctx.message.channel.send(indie_library.get_node_address(focii[author_name]).replace("il.node", "IL:\\") + ">")
 
@@ -128,6 +136,7 @@ def initialize_il_commands(bot):
             at_node: Node = indie_library.get_node(focii[author_name])
         except:
             await ctx.message.channel.send("<@" + str(author) + ">, you must .login first. Obviously.")
+            return
         if at_node.has_node(args[0]):
             focii[author_name] = at_node.get_node_in_node(args[0]).get_address()
         await ctx.message.channel.send(indie_library.get_node_address(focii[author_name]).replace("il.node", "IL:\\") + ">")
@@ -143,6 +152,7 @@ def initialize_il_commands(bot):
             at_node = indie_library.get_node(focii[author_name])
         except:
             await ctx.message.channel.send("<@" + str(author) + ">, you must .login first. Obviously.")
+            return
         string_to_return = "Nodes here are:\n"
         for node in at_node.get_nodes():
             string_to_return += "    " + node.get_name() + "\n"
@@ -167,10 +177,9 @@ def initialize_il_commands(bot):
         await ctx.message.channel.send(indie_library.get_node_address(focii[author_name]).replace("il.node", "IL:\\") + ">")
 
     @bot.command(name="hi", aliases=["hello", "howareyou", "hiya", "hey", "yo"])
-    @logger("il")
+    @logger("all")
     async def hi(ctx, *args):
         author = ctx.message.author.id
-        print("saying hi")
         global greetings
-        await ctx.message.channel.send(greetings[random.randint(1, 3)].format(str(author)))
+        await ctx.message.channel.send(greetings[random.randint(1, 3)].format("<@" + str(author) + ">"))
 
